@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<style type="text/css">
+    input {
+        height: 25px;
+        margin-top: 15px;
+    }
+
+    button {
+        width: 150px;
+        height: 30px;
+        margin-right: 20px;
+        margin-top: 15px;
+    }
+
+    .container {
+        margin-left: 50px;
+        margin-top: 25px;
+        display: flex;
+        flex-direction: row;
+        width: 600px;
+        height: 600px;
+        justify-content: space-between;
+    }
+
+    .img-container {
+        margin-top: 30px;
+        width: 150px;
+        height: 200px;
+    }
+
+    .input-button {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .right-container {
+        margin-left: 300px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    img {
+        width: 300px;
+        height: 450px;
+    }
+
+    .remaining-data {
+        height: 100px;
+        width: 300px;
+        margin-top: 300px;
+    }
+
+    .remaining-data2 {
+        height: 100px;
+        width: 300px;
+        margin-top: 50px;
+    }
+
+    body {
+        background-color: rgb(245, 245, 245);
+    }
+
+    .tema {
+        font-size: 24px;
+        font-weight: 600px;
+        color: rgb(20, 20, 20);
+        margin-left: 20px;
+    }
+
+    p {
+        font-size: 18px;
+        font-weight: 600;
+        color: black;
+    }
+</style>
+
+<body>
+
+    <p class='tema'> Tema 1 - Cloud Computing</p>
+
+    <div class="container">
+        <div>
+            <div class='input-button'>
+                <button onclick="movieFunction()"> Get Movie Data</button>
+                <input id='input' type="text" name="mname" placeholder="Movie name.." value="Movie"><br>
+            </div>
+
+            <p id='time1'>Time in ms</p>
+
+            <div class='img-container'>
+                <img id='poster' width="300px" height="450px"
+                    src="https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg"
+                    alt="img">
+            </div>
+
+            <p id='data2' class='remaining-data'>
+
+            </p>
+        </div>
+
+        <div class="right-container">
+            <div class='input-button'>
+                <button onclick="ActorFunction()"> Get Actor Data</button>
+                <input id='input2' type="text" name="mname" placeholder="Actor name.." value="Actor"><br>
+            </div>
+            <p id='time2'>Time in ms</p>
+            <div class='img-container'>
+                <img id='poster2' width="300px" height="450px"
+                    src="http://static.tvmaze.com/uploads/images/original_untouched/7/18275.jpg" alt="img">
+            </div>
+
+            <p id='data' class='remaining-data'>
+
+            </p>
+        </div>
+
+        <div class="right-container">
+            <button onclick="CheckActor()"> Check Cast</button>
+            <button onclick="recursive()"> Recursive</button>
+            <p id='time3'>Time in ms</p>
+            <div style="display: flex; flex-direction: row;"><p>Multiple call:</p> <p id='counter' style="margin-left: 5px;">0</p> </div>
+            <p id='data3' class='remaining-data2'>
+
+            </p>
+
+
+        </div>
+
+
+
+    </div>
+    <script language="JavaScript" type="text/javascript">
+
+
+
+        const recursive = function () {
+            document.getElementById('counter').innerHTML = 0;
+            var t0 = performance.now()
+
+                for (i = 0; i < 40; i++) {
+                    movieFunction();
+                    ActorFunction();
+                    CheckActor();
+                }
+
+                var t1 = performance.now();
+                console.log("Call multiple times took " + (t1 - t0) + " milliseconds.");
+        }
+
+        const movieFunction = function () {
+            var t0 = performance.now()
+            fetch('http://localhost:3000/movies', {
+                method: "PUT",
+                body: JSON.stringify(document.getElementById('input').value),
+            })
+                .then((response) => {
+                    var t1 = performance.now();
+
+                    console.log("Call to get movie took " + (t1 - t0) + " milliseconds.");
+                    
+                    document.getElementById('counter').innerHTML = (parseFloat((t1 - t0)) + parseFloat(document.getElementById('counter').innerHTML))/1000;
+                    document.getElementById('time1').innerHTML = 'Time: ' + (t1 - t0).toString() + ' ms';
+                    return response.json();
+                })
+                .then((myJson) => {
+                    console.log('+++ MOVIE RESPONSE', myJson);
+                    var s = document.getElementById("poster")
+                    s.src = myJson.Search[0].Poster
+                    var s2 = document.getElementById('data2')
+                    s2.innerHTML = myJson.Search[0].imdbID + ', Year: ' + myJson.Search[0].Year + ', Title: ' + myJson.Search[0].Title;
+                });
+
+        }
+
+
+        const ActorFunction = function () {
+            var t0 = performance.now()
+            fetch('http://localhost:3000/actors', {
+                method: "PUT",
+                body: JSON.stringify(document.getElementById('input2').value),
+            })
+                .then((response) => {
+                    var t1 = performance.now();
+                    
+                    console.log("Call to get actor took " + (t1 - t0) + " milliseconds.");
+                    document.getElementById('time2').innerHTML= 'Time: ' + (t1 - t0).toString() + ' ms';
+                    document.getElementById('counter').innerHTML =( parseFloat((t1 - t0)) + parseFloat(document.getElementById('counter').innerHTML))/ 1000;
+                    return response.json();
+                })
+                .then((myJson) => {
+                    console.log('+++ ACTORS RESPONSE', myJson);
+                    var s = document.getElementById('poster2');
+                    s.src = myJson[0].person.image.original;
+                    var s2 = document.getElementById('data')
+                    s2.innerHTML = myJson[0].person.name + ', Birthday:' + myJson[0].person.birthday + ', Birthplace: ' + myJson[0].person.country.name + ', Deathday: ' + (myJson[0].person.deathday !== null ? myJson[0].person.deathday : 'Still alive')
+                });
+
+        }
+
+        const CheckActor = function () {
+
+            var imdbId = document.getElementById('data2').textContent.split(',', 1);
+            var actorName = document.getElementById('data').textContent.split(',', 1);
+
+            var bodyParams = {
+                'imdbId': imdbId,
+                'actorName': actorName,
+            }
+            var t0 = performance.now()
+
+            fetch('http://localhost:3000/check-actor', {
+                method: "PUT",
+                body: JSON.stringify(bodyParams)
+            }).then((response) => {
+                var t1 = performance.now();
+                
+                console.log("Call to check actor took " + (t1 - t0) + " milliseconds.");
+                document.getElementById('time3').innerHTML= 'Time: ' + (t1 - t0).toString() + ' ms';
+                document.getElementById('counter').innerHTML = (parseFloat((t1 - t0)) + parseFloat(document.getElementById('counter').innerHTML)) / 1000
+                return response.json();
+            })
+                .then(myJson => {
+                    console.log('+++ CHECK ACTORS', myJson);
+                    var a = myJson.Actors;
+
+                    if (a.includes(actorName[0])) {
+                        var s3 = document.getElementById('data3')
+                        s3.innerHTML = 'Yes, the actor played in that movie'
+                    } else {
+                        var s3 = document.getElementById('data3')
+                        s3.innerHTML = 'No, the actor did not play in that movie'
+                    }
+                })
+
+        }
+
+    </script>
+</body>
+
+</html>
